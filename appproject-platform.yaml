@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: dev
+  name: platform
   namespace: argocd
 spec:
-  description: Development environment applications
+  description: Platform applications (all environments)
   
   # Source repositories
   sourceRepos:
-  - 'https://github.com/andywatts/k8s-apps'
+  - 'https://github.com/andywatts/k8s-infra'
   - 'https://github.com/andywatts/sample-app'
   - 'https://charts.konghq.com'
   

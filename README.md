@@ -1,17 +1,20 @@
-# k8s-apps
+# k8s-infra
 
-Platform infrastructure charts and ArgoCD configuration.
+Kubernetes platform infrastructure charts and ArgoCD configuration.
 
 ## Structure
 
 ```
 charts/
-  kong/                # Kong API Gateway (DB-less)
+  kong/                      # Kong API Gateway (DB-less)
 values/
   dev/
-    kong.yaml          # Kong dev config
-appproject-dev.yaml        # ArgoCD project (RBAC, repo access)
-applicationset-dev.yaml    # ArgoCD ApplicationSet (auto-deployment)
+    kong.yaml                # Kong dev config
+  staging/
+    kong.yaml                # Kong staging config
+appproject-platform.yaml     # ArgoCD project (all environments)
+applicationset-dev.yaml      # Dev apps auto-deployment
+applicationset-staging.yaml  # Staging apps auto-deployment
 ```
 
 ## Architecture
@@ -19,10 +22,23 @@ applicationset-dev.yaml    # ArgoCD ApplicationSet (auto-deployment)
 **Platform Infrastructure** (this repo):
 - Kong API Gateway
 - Shared platform services
+- ArgoCD configuration
 
 **Applications** (separate repos):
 - [sample-app](https://github.com/andywatts/sample-app) - Each app owns its Helm chart
 - Future apps follow same pattern
+
+### ArgoCD Components
+
+**AppProject** (`appproject-platform.yaml`):
+- Single project for all environments
+- Defines security boundaries (allowed repos, namespaces, resources)
+- Simplifies RBAC management
+
+**ApplicationSets** (per environment):
+- `applicationset-dev.yaml` - Generates dev-kong, dev-sample-app
+- `applicationset-staging.yaml` - Generates staging-kong, staging-sample-app
+- Automates multi-app deployment from templates
 
 ## Quick Start
 
@@ -31,7 +47,8 @@ applicationset-dev.yaml    # ArgoCD ApplicationSet (auto-deployment)
 gcloud container clusters get-credentials dev-cluster \
   --region=us-west2 --project=development-690488
 
-# Deploy applications
+# Deploy AppProject and ApplicationSet
+kubectl apply -f appproject-platform.yaml
 kubectl apply -f applicationset-dev.yaml
 
 # Check status
@@ -92,9 +109,9 @@ EOF
 git init && git add . && git commit -m "Initial commit"
 gh repo create my-app --public --source=. --push
 
-# 5. Update k8s-apps repo
-# - Add repo to appproject-dev.yaml
-# - Add app to applicationset-dev.yaml
+# 5. Update k8s-infra repo
+# - Add repo to appproject-platform.yaml sourceRepos
+# - Add app entry to applicationset-dev.yaml (and staging if needed)
 
 # 6. Deploy
 git add . && git commit -m "Add my-app" && git push
