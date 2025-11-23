@@ -6,7 +6,7 @@ metadata:
 spec:
   generators:
   - git:
-      repoURL: https://github.com/yourorg/k8s-apps
+      repoURL: https://github.com/andywatts/k8s-apps
       revision: main
       directories:
       - path: environments/dev/*
@@ -16,7 +16,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/yourorg/k8s-apps
+        repoURL: https://github.com/andywatts/k8s-apps
         targetRevision: main
         path: '{{path}}'
       destination:
