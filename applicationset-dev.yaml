@@ -10,12 +10,14 @@ spec:
       # Apps that live in their own repos
       - app: sample-app
         cluster: dev
+        project: sample-app
         repoURL: https://github.com/andywatts/sample-app
         path: chart
         valuesFile: ../environments/values-dev.yaml
       # Platform infrastructure (Kong) in k8s-infra repo
       - app: kong
         cluster: dev
+        project: kong
         repoURL: https://github.com/andywatts/k8s-infra
         path: charts/kong
         valuesFile: values/dev/kong.yaml
@@ -23,7 +25,7 @@ spec:
     metadata:
       name: '{{cluster}}-{{app}}'
     spec:
-      project: platform
+      project: '{{project}}'
       source:
         repoURL: '{{repoURL}}'
         targetRevision: main

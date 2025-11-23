@@ -12,7 +12,8 @@ values/
     kong.yaml                # Kong dev config
   staging/
     kong.yaml                # Kong staging config
-appproject-platform.yaml     # ArgoCD project (all environments)
+appproject-kong.yaml         # ArgoCD project for Kong (namespace: kong)
+appproject-sample-app.yaml   # ArgoCD project for sample-app (namespace: sample-app)
 applicationset-dev.yaml      # Dev apps auto-deployment
 applicationset-staging.yaml  # Staging apps auto-deployment
 ```
@@ -30,10 +31,10 @@ applicationset-staging.yaml  # Staging apps auto-deployment
 
 ### ArgoCD Components
 
-**AppProject** (`appproject-platform.yaml`):
-- Single project for all environments
-- Defines security boundaries (allowed repos, namespaces, resources)
-- Simplifies RBAC management
+**AppProjects** (per application):
+- `appproject-kong.yaml` - Kong can only deploy to `kong` namespace
+- `appproject-sample-app.yaml` - sample-app can only deploy to `sample-app` namespace
+- Each app isolated to its own namespace (security)
 
 **ApplicationSets** (per environment):
 - `applicationset-dev.yaml` - Generates dev-kong, dev-sample-app
@@ -47,8 +48,9 @@ applicationset-staging.yaml  # Staging apps auto-deployment
 gcloud container clusters get-credentials dev-cluster \
   --region=us-west2 --project=development-690488
 
-# Deploy AppProject and ApplicationSet
-kubectl apply -f appproject-platform.yaml
+# Deploy AppProjects and ApplicationSet
+kubectl apply -f appproject-kong.yaml
+kubectl apply -f appproject-sample-app.yaml
 kubectl apply -f applicationset-dev.yaml
 
 # Check status
@@ -110,7 +112,7 @@ git init && git add . && git commit -m "Initial commit"
 gh repo create my-app --public --source=. --push
 
 # 5. Update k8s-infra repo
-# - Add repo to appproject-platform.yaml sourceRepos
+# - Create appproject-my-app.yaml (restrict to my-app namespace)
 # - Add app entry to applicationset-dev.yaml (and staging if needed)
 
 # 6. Deploy

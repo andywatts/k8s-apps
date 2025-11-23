@@ -1,20 +1,19 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: platform
+  name: kong
   namespace: argocd
 spec:
-  description: Platform applications (all environments)
+  description: Kong API Gateway (all environments)
   
   # Source repositories
   sourceRepos:
   - 'https://github.com/andywatts/k8s-infra'
-  - 'https://github.com/andywatts/sample-app'
   - 'https://charts.konghq.com'
   
-  # Allowed destinations
+  # Kong can only deploy to kong namespace
   destinations:
-  - namespace: '*'
+  - namespace: 'kong'
     server: https://kubernetes.default.svc
   
   # Allow all Kubernetes resources
