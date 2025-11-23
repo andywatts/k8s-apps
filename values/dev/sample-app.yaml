@@ -14,7 +14,7 @@ resources:
 
 # Kong Ingress - enabled for dev testing to fix cache issue
 ingress:
-  enabled: true
+  enabled: false
   host: sample-app.dev.local
   path: /
   annotations:
@@ -24,12 +24,12 @@ ingress:
 kong:
   plugins:
     rateLimit:
-      enabled: true
+      enabled: false
       minute: 100
     cors:
-      enabled: true
+      enabled: false
       origins:
         - "*"
     requestTransformer:
-      enabled: true
+      enabled: false
 
