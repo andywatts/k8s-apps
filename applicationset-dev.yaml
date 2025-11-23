@@ -18,7 +18,7 @@ spec:
     metadata:
       name: '{{cluster}}-{{app}}'
     spec:
-      project: default
+      project: dev
       source:
         repoURL: https://github.com/andywatts/k8s-apps
         targetRevision: main
