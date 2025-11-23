@@ -12,9 +12,9 @@ resources:
     memory: "128Mi"
     cpu: "200m"
 
-# Kong Ingress - enabled for dev testing
+# Kong Ingress - temporarily disabled to fix cache issue
 ingress:
-  enabled: true
+  enabled: false
   host: sample-app.dev.local
   path: /
   annotations:
