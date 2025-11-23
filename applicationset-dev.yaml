@@ -12,7 +12,7 @@ spec:
         cluster: dev
         repoURL: https://github.com/andywatts/sample-app
         path: chart
-        valuesFile: environments/values-dev.yaml
+        valuesFile: ../environments/values-dev.yaml
       # Platform infrastructure (Kong) in k8s-apps repo
       - app: kong
         cluster: dev
