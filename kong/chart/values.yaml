@@ -48,7 +48,12 @@ kong:
     
   # Manager (Admin GUI)
   manager:
-    enabled: false  # Disable GUI by default, can enable in staging/prod
+    enabled: true
+    type: ClusterIP  # Not exposed externally by default
+    http:
+      enabled: true
+      servicePort: 8002
+      containerPort: 8002
     
   # Portal
   portal:

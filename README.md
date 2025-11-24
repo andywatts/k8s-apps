@@ -1,76 +1,137 @@
 # k8s-infra
 
-Platform infrastructure services and ArgoCD configuration for Kubernetes.
+Platform infrastructure services and ArgoCD configuration for Kubernetes clusters.
 
 ## Structure
 
 ```
 argocd/
   projects/           # AppProjects (namespace isolation)
+    kong.yaml
+    sample-app.yaml
   applicationsets/    # ApplicationSets (per environment)
-kong/                 # Kong API Gateway
-  chart/              # Helm chart
-  values/             # Environment configs (dev.yaml, staging.yaml)
+    dev.yaml
+    staging.yaml
+kong/
+  chart/              # Kong Helm chart wrapper
+    values.yaml       # Default Kong configuration
+  values/             # Environment-specific configs
+    dev.yaml
+    staging.yaml
 ```
 
-**Scope:** Infrastructure team manages platform services (Kong, future: Istio, cert-manager).  
-**Apps:** Teams own separate repos ([sample-app](https://github.com/andywatts/sample-app)) with their charts.
+## What's Deployed
+
+### Kong API Gateway
+- **Ingress Controller** in DB-less mode
+- **Load Balancer** for traffic routing
+- **Admin API** and **Manager GUI** for management
+- Deployed via ArgoCD to dev/staging environments
+
+### Sample App
+- Example application with Kong ingress configured
+- Demonstrates rate limiting and CORS plugins
+- Located in separate repo: `/infra/sample-app`
 
 ## Quick Start
+
+### Deploy Kong
+
+```bash
+# One command deployment
+./deploy-kong.sh dev
+```
+
+The script will:
+- Connect to your GKE cluster
+- Apply the ApplicationSet
+- Wait for Kong to be ready
+- Display the LoadBalancer IP and access instructions
+
+### Manual Deployment
 
 ```bash
 # Connect to cluster
 gcloud container clusters get-credentials dev-cluster \
-  --region=us-west2 --project=development-690488
+  --zone=us-west2-a --project=development-690488
 
-# Deploy AppProjects and ApplicationSets
-kubectl apply -f argocd/projects/
+# Deploy ArgoCD resources
+kubectl apply -f argocd/projects/kong.yaml
 kubectl apply -f argocd/applicationsets/dev.yaml
 
 # Check status
 kubectl get applications -n argocd
-kubectl get pods -A
+kubectl get pods -n kong
 ```
 
-## Kong API Gateway
+### Access Kong
 
-Ingress Controller in DB-less mode. Get proxy IP:
 ```bash
-kubectl get svc -n kong dev-kong-kong-proxy
+# Get proxy LoadBalancer IP
+kubectl get svc -n kong kong-kong-proxy
+
+# Test Kong
+curl http://<KONG_IP>
+
+# Access Admin API (port-forward)
+kubectl port-forward -n kong svc/kong-kong-admin 8001:8001
+
+# Access Manager GUI (port-forward)
+kubectl port-forward -n kong svc/kong-kong-manager 8002:8002
+# Open http://localhost:8002
 ```
 
-Test:
-```bash
-echo "KONG_IP sample-app.dev.local" | sudo tee -a /etc/hosts
-curl http://sample-app.dev.local
-```
+## Add New Infrastructure Service
 
-## Add New Service
-
-**Infrastructure service** (infra team):
+1. **Create chart structure:**
 ```bash
 mkdir -p my-service/chart/templates my-service/values
-# Add chart + values/dev.yaml, values/staging.yaml
-# Create argocd/projects/my-service.yaml
-# Add to argocd/applicationsets/dev.yaml
 ```
 
-**Application** (app team):
+2. **Add environment configs:**
 ```bash
-# Create separate repo with chart/ and environments/
-# Infra team adds argocd/projects/my-app.yaml + ApplicationSet entry
+# my-service/values/dev.yaml
+# my-service/values/staging.yaml
 ```
 
-## Commands
+3. **Create AppProject:**
+```bash
+# argocd/projects/my-service.yaml
+```
+
+4. **Add to ApplicationSet:**
+```yaml
+# In argocd/applicationsets/dev.yaml
+- app: my-service
+  repoPath: my-service/chart
+  valuesFile: my-service/values/dev.yaml
+```
+
+5. **Deploy:**
+```bash
+git add . && git commit -m "Add my-service" && git push
+kubectl apply -f argocd/applicationsets/dev.yaml
+```
+
+## Documentation
+
+- **[KONG.md](./KONG.md)** - Complete Kong API Gateway documentation
+- **[deploy-kong.sh](./deploy-kong.sh)** - Automated deployment script
+
+## ArgoCD Management
 
 ```bash
 # View applications
 kubectl get applications -n argocd
 
 # Force sync
-kubectl patch app my-app -n argocd \
+kubectl patch app dev-kong -n argocd \
   --type merge -p '{"metadata":{"annotations":{"argocd.argoproj.io/refresh":"hard"}}}'
+
+# View application details
+kubectl describe application dev-kong -n argocd
 ```
 
 ---
-**GitOps:** Push to repo → ArgoCD syncs automatically
+
+**GitOps:** Push to repo → ArgoCD syncs automatically (auto-sync enabled, prune enabled)
